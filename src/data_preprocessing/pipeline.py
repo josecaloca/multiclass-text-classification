@@ -1,18 +1,19 @@
+import os
 import zipfile
 from io import BytesIO
 from typing import Tuple
 
 import pandas as pd
 import requests
-from comet_ml import Artifact, start
 from datasets import Dataset, DatasetDict
 from dotenv import load_dotenv
+from huggingface_hub import login
 from loguru import logger
 from sklearn.model_selection import train_test_split
 from transformers import AutoTokenizer
 
 from data_preprocessing.text_cleaner import clean_text
-from paths import PARENT_DIR, PROCESSED_DATA_DIR, RAW_DATA_DIR
+from paths import RAW_DATA_DIR
 from src.config import Config, config
 
 
@@ -163,27 +164,7 @@ class DataProcessingPipeline:
         Returns:
             dict: The tokenized dataset.
         """
-        return self.tokenizer(df['title_prepared'], truncation=True)
-
-    def register_to_artifacts_registry(self) -> None:
-        """
-        Registers the processed dataset to the CometML Artifact Registry.
-
-        This function loads environment variables, initializes a CometML experiment,
-        creates an artifact for the processed dataset, adds the dataset to the artifact,
-        logs it into the registry, and then ends the experiment.
-
-        Logs indicate the registration progress and success.
-        """
-        logger.info('Registering dataset to CometML Artifact Registry')
-        load_dotenv(PARENT_DIR / 'settings.env')
-        experiment = start()
-        artifact = Artifact(name='news_dataset_hugging_face', artifact_type='dataset')
-
-        artifact.add(PROCESSED_DATA_DIR / 'news_dataset_hugging_face')
-        experiment.log_artifact(artifact)
-        experiment.end()
-        logger.info('Dataset registered successfully.')
+        return self.tokenizer(df['title_prepared'], padding=True, truncation=True)
 
     def process(self):
         """
@@ -196,19 +177,19 @@ class DataProcessingPipeline:
         train_df, val_df, test_df = self.split_data(news_df)
         dataset_dict = self.convert_to_dataset_dict(train_df, val_df, test_df)
 
+        logger.info('Tokenizing dataset')
         tokenized_dataset_dict = dataset_dict.map(
             self.preprocess_function, batched=True
         )
-
-        tokenized_dataset_dict.save_to_disk(
-            PROCESSED_DATA_DIR / 'news_dataset_hugging_face'
-        )
-
-        self.register_to_artifacts_registry()
+        logger.info('Pushing dataset to HF Hub')
+        tokenized_dataset_dict.push_to_hub(config.hf_dataset_registry)
 
         logger.info('Data processing pipeline completed successfully')
 
 
 if __name__ == '__main__':
+    load_dotenv()
+    hf_token = os.getenv('HF_TOKEN')
+    login(token=hf_token)
     pipeline = DataProcessingPipeline(config=config)
     pipeline.process()
