@@ -12,31 +12,46 @@ from loguru import logger
 from sklearn.metrics import f1_score, precision_score, recall_score
 from transformers import DistilBertModel
 
-from src.config import Config, config
-from src.paths import MODELS_DIR
+from utils.paths import MODELS_DIR
+from .base import TrainingPipeline
 
 
-class XGBoostTrainingPipeline:
+class XGBoostTrainingPipeline(TrainingPipeline):
     """
     Encapsulates the training pipeline for an XGBoost model using DistilBERT embeddings.
     """
 
-    def __init__(self, config: Config) -> None:
+    def __init__(self,
+                project_name: str,
+                hf_dataset_registry: str,
+                pre_trained_bert_model: str,
+                frac_sample_reduction_training: float,
+                frac_sample_reduction_validation: float,
+                frac_sample_reduction_testing: float,
+                id2label: dict,
+                random_state: int,
+                ) -> None:
         """
         Initializes the pipeline by loading the dataset, extracting embeddings, and preparing data.
-
-        Args:
-            config (Config): Configuration settings for the pipeline.
         """
+        self.project_name = project_name
+        self.hf_dataset_registry = hf_dataset_registry
+        self.pre_trained_bert_model = pre_trained_bert_model
+        self.frac_sample_reduction_training = frac_sample_reduction_training
+        self.frac_sample_reduction_validation = frac_sample_reduction_validation
+        self.frac_sample_reduction_testing = frac_sample_reduction_testing
+        self.id2label = id2label
+        self.random_state = random_state
+        
         logger.info('Initializing XGBoostTrainingPipeline')
-        comet_ml.login(project_name=config.project_name)
+        comet_ml.login(project_name=self.project_name)
 
         # Load dataset
-        self.tokenized_dataset_dict = load_dataset(config.hf_dataset_registry)
-        self._prepare_datasets(config)
+        self.tokenized_dataset_dict = load_dataset(self.hf_dataset_registry)
+        self._prepare_datasets()
 
         # Load pretrained DistilBERT model
-        self.model = DistilBertModel.from_pretrained(config.pre_trained_bert_model)
+        self.model = DistilBertModel.from_pretrained(self.pre_trained_bert_model)
         self.model.eval()
 
         # Extract embeddings
@@ -47,17 +62,17 @@ class XGBoostTrainingPipeline:
         # Convert to DataFrames
         self.df_train, self.df_val, self.df_test = self._convert_to_dataframe()
 
-    def _prepare_datasets(self, config: Config) -> None:
+    def _prepare_datasets(self) -> None:
         """Reduces dataset sizes based on configured fraction reduction."""
         logger.info('Subsampling datasets')
         sample_fractions = {
-            'train': config.frac_sample_reduction_training,
-            'validation': config.frac_sample_reduction_validation,
-            'test': config.frac_sample_reduction_testing,
+            'train': self.frac_sample_reduction_training,
+            'validation': self.frac_sample_reduction_validation,
+            'test': self.frac_sample_reduction_testing,
         }
         self.tokenized_dataset_dict = DatasetDict(
             {
-                split: dataset.shuffle(seed=config.random_state).select(
+                split: dataset.shuffle(seed=self.random_state).select(
                     range(int(dataset.num_rows * sample_fractions[split]))
                 )
                 for split, dataset in self.tokenized_dataset_dict.items()
@@ -123,7 +138,7 @@ class XGBoostTrainingPipeline:
         Trains an XGBoost model on the extracted embeddings and logs it to Comet ML.
         """
         logger.info('Starting XGBoost training')
-        experiment = comet_ml.start(project_name=config.project_name)
+        experiment = comet_ml.start(project_name=self.project_name)
 
         # Separate features and labels
         X_train, y_train = self.df_train.drop(columns=['label']), self.df_train['label']
@@ -157,7 +172,7 @@ class XGBoostTrainingPipeline:
         experiment.log_confusion_matrix(
             y_true=y_val,
             y_predicted=y_pred,
-            labels=config.id2label.values(),
+            labels=self.id2label.values(),
         )
 
         # Save and log the trained model
@@ -167,10 +182,3 @@ class XGBoostTrainingPipeline:
 
         experiment.end()
 
-
-if __name__ == '__main__':
-    load_dotenv('settings.env')
-    logger.info('Starting XGBoostTrainingPipeline execution')
-    pipeline = XGBoostTrainingPipeline(config=config)
-    pipeline.train()
-    logger.info('Pipeline execution completed')

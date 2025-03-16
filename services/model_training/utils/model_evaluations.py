@@ -6,15 +6,13 @@ import numpy as np
 from datasets import Dataset
 from loguru import logger
 
-from src.config import config
-
 
 class BertModelEvaluator:
     """
     Handles evaluation metrics computation and logging to CometML.
     """
 
-    def __init__(self, validation_dataset: Dataset) -> None:
+    def __init__(self, validation_dataset: Dataset, id2label: dict) -> None:
         """
         Initializes the evaluator with validation dataset and evaluation metrics.
 
@@ -23,6 +21,7 @@ class BertModelEvaluator:
         """
         logger.info('Initializing BertModelEvaluator')
         self.validation_dataset = validation_dataset
+        self.id2label = id2label
         self.accuracy = evaluate.load('accuracy')
         self.precision = evaluate.load('precision')
         self.recall = evaluate.load('recall')
@@ -70,7 +69,7 @@ class BertModelEvaluator:
                 y_true=labels,
                 y_predicted=preds,
                 file_name=f'confusion-matrix-epoch-{epoch}.json',
-                labels=list(config.id2label.values()),
+                labels=list(self.id2label.values()),
                 index_to_example_function=self.get_example,
             )
             logger.info('Logged confusion matrix to CometML')

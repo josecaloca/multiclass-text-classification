@@ -1,5 +1,5 @@
 [project]
-name = "multiclass-text-classification"
+name = "model-training"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -9,18 +9,11 @@ dependencies = [
     "datasets>=3.3.2",
     "dotenv>=0.9.9",
     "evaluate>=0.4.3",
-    "ipykernel>=6.29.5",
-    "ipywidgets>=8.1.5",
     "loguru>=0.7.3",
-    "nltk>=3.9.1",
     "pandas>=2.2.3",
     "pydantic-settings>=2.8.1",
     "scikit-learn>=1.6.1",
-    "tensorflow==2.15",
     "torch>=2.6.0",
     "transformers[torch]>=4.49.0",
     "xgboost>=2.1.4",
 ]
-
-[tool.uv.workspace]
-members = ["src/model_training"]

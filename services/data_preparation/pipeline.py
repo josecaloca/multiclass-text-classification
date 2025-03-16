@@ -10,9 +10,9 @@ from loguru import logger
 from sklearn.model_selection import train_test_split
 from transformers import AutoTokenizer
 
-from data_preprocessing.text_cleaner import clean_text
-from paths import RAW_DATA_DIR
-from src.config import Config, config
+from utils.text_cleaner import clean_text
+from utils.paths import RAW_DATA_DIR
+from config import Config, config
 
 
 class DataProcessingPipeline:
@@ -187,7 +187,5 @@ class DataProcessingPipeline:
 
 if __name__ == '__main__':
     load_dotenv('settings.env')
-    # hf_token = os.getenv('HF_TOKEN')
-    # login(token=hf_token)
     pipeline = DataProcessingPipeline(config=config)
     pipeline.process()
