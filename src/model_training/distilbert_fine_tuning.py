@@ -111,7 +111,8 @@ class BertTrainingPipeline:
         logger.info('Training completed')
         comet_ml.get_running_experiment().end()
         trainer.push_to_hub(config.hf_model_registry)
-        logger.info('Model pushed to hub successfully')
+        self.tokenizer.push_to_hub(config.hf_model_registry)
+        logger.info('Model and custom Tokenizer pushed to hub successfully')
 
 
 if __name__ == '__main__':

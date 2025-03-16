@@ -7,6 +7,12 @@ resolution-markers = [
     "python_full_version < '3.11'",
 ]
 
+[manifest]
+members = [
+    "model-training",
+    "multiclass-text-classification",
+]
+
 [[package]]
 name = "absl-py"
 version = "2.1.0"
@@ -1193,6 +1199,47 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/49/a0/01570d615d16f504be091b914a6ae9a29e80d09b572ebebc32ecb1dfb22d/ml_dtypes-0.2.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:36d28b8861a8931695e5a31176cad5ae85f6504906650dea5598fbec06c94606", size = 1012631 },
     { url = "https://files.pythonhosted.org/packages/87/91/d57c2d22e4801edeb7f3e7939214c0ea8a28c6e16f85208c2df2145e0213/ml_dtypes-0.2.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e85ba8e24cf48d456e564688e981cf379d4c8e644db0a2f719b78de281bac2ca", size = 1017764 },
     { url = "https://files.pythonhosted.org/packages/08/89/c727fde1a3d12586e0b8c01abf53754707d76beaa9987640e70807d4545f/ml_dtypes-0.2.0-cp311-cp311-win_amd64.whl", hash = "sha256:832a019a1b6db5c4422032ca9940a990fa104eee420f643713241b3a518977fa", size = 938744 },
+]
+
+[[package]]
+name = "model-training"
+version = "0.1.0"
+source = { virtual = "src/model_training" }
+dependencies = [
+    { name = "comet-ml" },
+    { name = "datasets" },
+    { name = "dotenv" },
+    { name = "evaluate" },
+    { name = "ipykernel" },
+    { name = "ipywidgets" },
+    { name = "loguru" },
+    { name = "nltk" },
+    { name = "pandas" },
+    { name = "pydantic-settings" },
+    { name = "scikit-learn" },
+    { name = "tensorflow" },
+    { name = "torch" },
+    { name = "transformers", extra = ["torch"] },
+    { name = "xgboost" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "comet-ml", specifier = ">=3.49.5" },
+    { name = "datasets", specifier = ">=3.3.2" },
+    { name = "dotenv", specifier = ">=0.9.9" },
+    { name = "evaluate", specifier = ">=0.4.3" },
+    { name = "ipykernel", specifier = ">=6.29.5" },
+    { name = "ipywidgets", specifier = ">=8.1.5" },
+    { name = "loguru", specifier = ">=0.7.3" },
+    { name = "nltk", specifier = ">=3.9.1" },
+    { name = "pandas", specifier = ">=2.2.3" },
+    { name = "pydantic-settings", specifier = ">=2.8.1" },
+    { name = "scikit-learn", specifier = ">=1.6.1" },
+    { name = "tensorflow", specifier = "==2.15" },
+    { name = "torch", specifier = ">=2.6.0" },
+    { name = "transformers", extras = ["torch"], specifier = ">=4.49.0" },
+    { name = "xgboost", specifier = ">=2.1.4" },
 ]
 
 [[package]]

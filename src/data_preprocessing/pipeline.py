@@ -1,4 +1,3 @@
-import os
 import zipfile
 from io import BytesIO
 from typing import Tuple
@@ -7,7 +6,6 @@ import pandas as pd
 import requests
 from datasets import Dataset, DatasetDict
 from dotenv import load_dotenv
-from huggingface_hub import login
 from loguru import logger
 from sklearn.model_selection import train_test_split
 from transformers import AutoTokenizer
@@ -188,8 +186,8 @@ class DataProcessingPipeline:
 
 
 if __name__ == '__main__':
-    load_dotenv()
-    hf_token = os.getenv('HF_TOKEN')
-    login(token=hf_token)
+    load_dotenv('settings.env')
+    # hf_token = os.getenv('HF_TOKEN')
+    # login(token=hf_token)
     pipeline = DataProcessingPipeline(config=config)
     pipeline.process()

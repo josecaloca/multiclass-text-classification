@@ -25,6 +25,8 @@ COPY --from=builder /usr/local/bin/uv /usr/local/bin/uv
 
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
+# Ensure PYTHONPATH is correctly set
+ENV PYTHONPATH=/app/src
 
 # Run make pre-processing-pipeline
-RUN make pre-processing-pipeline
+CMD ["make", "model-training-execution"]

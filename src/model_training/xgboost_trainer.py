@@ -123,7 +123,7 @@ class XGBoostTrainingPipeline:
         Trains an XGBoost model on the extracted embeddings and logs it to Comet ML.
         """
         logger.info('Starting XGBoost training')
-        experiment = comet_ml.Experiment(project_name=config.project_name)
+        experiment = comet_ml.start(project_name=config.project_name)
 
         # Separate features and labels
         X_train, y_train = self.df_train.drop(columns=['label']), self.df_train['label']
@@ -154,6 +154,11 @@ class XGBoostTrainingPipeline:
         experiment.log_metric('precision', precision)
         experiment.log_metric('recall', recall)
         experiment.log_metric('f1_score', f1)
+        experiment.log_confusion_matrix(
+            y_true=y_val,
+            y_predicted=y_pred,
+            labels=config.id2label.values(),
+        )
 
         # Save and log the trained model
         model_path = MODELS_DIR / 'xgboost_model.pkl'

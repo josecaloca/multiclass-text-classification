@@ -21,3 +21,6 @@ dependencies = [
     "transformers[torch]>=4.49.0",
     "xgboost>=2.1.4",
 ]
+
+[tool.uv.workspace]
+members = ["src/model_training"]
