@@ -86,30 +86,30 @@ The API exposes the following endpoint:
 This project uses a modern **MLOps pipeline** with well-structured **Dockerized services** to ensure reproducibility and efficient deployment. Below are the key technologies used:
 
 ### 📌 **Machine Learning & Model Training**
-- **Hugging Face Transformers** – Used for **fine-tuning a DistilBERT model** to classify news headlines.
-- **XGBoost** – A gradient boosting algorithm used for training an alternative classifier based on embeddings extracted from DistilBERT.
-- **Scikit-Learn** – Used for additional preprocessing and evaluation metrics.
-- **CometML** – Integrated to **track experiments**, log training metrics during model development and used also as a secondary model registry.
+- [**Hugging Face Transformers**](https://huggingface.co/docs/transformers/index) – Used for **fine-tuning a DistilBERT model** to classify news headlines.
+- [**XGBoost**](https://github.com/dmlc/xgboost) – A gradient boosting algorithm used for training an alternative classifier based on embeddings extracted from DistilBERT.
+- [**Scikit-Learn**](https://scikit-learn.org/stable/) – Used for additional preprocessing and evaluation metrics.
+- [**CometML**](https://www.comet.com/josecaloca/multiclass-text-classification/view/new/panels) – Integrated to **track experiments**, log training metrics during model development and used also as a secondary model registry.
 
 ### 📦 **Model Registry & Feature Store (Hugging Face Hub + CometML)**
 - **Hugging Face Hub** acts as:
-  - A **Model Registry** for storing and versioning **fine-tuned DistilBERT models**
-  - A **Feature Store** where the **pre-processed dataset** (tokenized) is stored and retrieved for training and inference.
+  - A [**Model Registry**](https://huggingface.co/josecaloca/multiclass-text-classification) for storing and versioning **fine-tuned DistilBERT models**
+  - A [**Feature Store**](https://huggingface.co/datasets/josecaloca/multiclass-text-classification-dataset) where the **pre-processed dataset** (tokenized) is stored and retrieved for training and inference.
 - The trained XGBoost model is stored in **CometML**.
 
 ### 🚀 **Model Deployment & API**
-- **Litserve** – A high-performance framework built on top of **FastAPI**, optimized specifically for **ML model deployment**.
-- **Requests** – Used in `client.py` to fetch live news headlines and send them to the API for classification.
+- [**Litserve**](https://lightning.ai/docs/litserve/home) – A high-performance framework built on top of **FastAPI**, optimized specifically for **ML model deployment**.
+- [**Requests**](https://requests.readthedocs.io/en/latest/) – Used in `client.py` to fetch live news headlines and send them to the API for classification.
 
 ### 🐳 **Containerization & Automation**
-- **Docker** – Ensures each service runs in an isolated and reproducible environment.
-- **Makefiles** – Automates the **build & run** process for each service (`data_preparation`, `model_training`, and `api`).
-- **UV** – Used as the **dependency manager**, ensuring reproducibility and fast installations (instead of Poetry).
+- [**Docker**](https://www.docker.com/) – Ensures each service runs in an isolated and reproducible environment.
+- [**Makefiles**](https://www.gnu.org/software/make/) – Automates the **build & run** process for each service (`data_preparation`, `model_training`, and `api`).
+- [**UV**](https://docs.astral.sh/uv/) – Used as the **python package and project manager**, ensuring reproducibility and fast installations (as compared to Poetry).
 
 ### 📊 **Experiment Tracking & Logging**
-- **CometML** – Used to log metrics such as **F1-score, precision, recall, and confusion matrices** during training.
-- **Loguru** – A modern logging library used for structured logging and error tracking across the project.
+- [**CometML**](https://www.comet.com/josecaloca/multiclass-text-classification) – Used to log metrics such as **F1-score, precision, recall, and confusion matrices** during training.
+- [**Loguru**](https://github.com/Delgan/loguru) – A modern logging library used for structured logging and error tracking across the project.
 
 ### 📜 **Code Quality & Linting**
-- **Ruff** – A fast and efficient Python linter that enforces best practices and keeps the code clean.
-- **Pre-commit Hooks** – Ensures code quality by automatically running linting, formatting, and security checks before commits.
+- [**Ruff**](https://docs.astral.sh/ruff/) – A fast and efficient Python linter that enforces best practices and keeps the code clean.
+- [**Pre-commit Hooks**](https://pre-commit.com/) – Ensures code quality by automatically running linting, formatting, and security checks before commits.
