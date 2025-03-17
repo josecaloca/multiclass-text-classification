@@ -1,0 +1,9 @@
+
+# Exclude virtual environment
+.venv
+# Ignore datasets and logs
+data/
+notebooks/
+models/
+logs/
+__pycache__/
