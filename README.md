@@ -103,5 +103,3 @@ This project utilizes a modern **MLOps pipeline** with well-structured **Dockeri
 ### 📜 **Code Quality & Linting**
 - **Ruff** – A fast and efficient Python linter that enforces best practices and keeps the code clean.
 - **Pre-commit Hooks** – Ensures code quality by automatically running linting, formatting, and security checks before commits.
-
-

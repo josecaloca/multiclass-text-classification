@@ -4,15 +4,14 @@ from typing import Tuple
 
 import pandas as pd
 import requests
+from config import Config, config
 from datasets import Dataset, DatasetDict
 from dotenv import load_dotenv
 from loguru import logger
 from sklearn.model_selection import train_test_split
 from transformers import AutoTokenizer
-
-from utils.text_cleaner import clean_text
 from utils.paths import RAW_DATA_DIR
-from config import Config, config
+from utils.text_cleaner import clean_text
 
 
 class DataProcessingPipeline:
@@ -34,7 +33,12 @@ class DataProcessingPipeline:
         self.train_ratio = config.train_ratio
         self.val_ratio = config.val_ratio
         self.test_ratio = config.test_ratio
-        self.label_mapping = {'b': 0, 't': 1, 'e': 2, 'm': 3}  # Maps category labels to numerical values.
+        self.label_mapping = {
+            'b': 0,
+            't': 1,
+            'e': 2,
+            'm': 3,
+        }  # Maps category labels to numerical values.
         self.tokenizer = AutoTokenizer.from_pretrained(config.pre_trained_bert_model)
 
     def download_and_extract_dataset(self) -> None:
@@ -60,7 +64,14 @@ class DataProcessingPipeline:
         """
         logger.info('Loading dataset into a DataFrame')
         news_columns = [
-            'id', 'title', 'url', 'publisher', 'label', 'story', 'hostname', 'timestamp'
+            'id',
+            'title',
+            'url',
+            'publisher',
+            'label',
+            'story',
+            'hostname',
+            'timestamp',
         ]
         news_df = pd.read_csv(
             RAW_DATA_DIR / 'newsCorpora.csv', delimiter='\t', names=news_columns
@@ -79,9 +90,13 @@ class DataProcessingPipeline:
             pd.DataFrame: A cleaned dataset with only the required columns for training.
         """
         logger.info('Preprocessing data')
-        df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')  # Convert timestamp to datetime.
+        df['timestamp'] = pd.to_datetime(
+            df['timestamp'], unit='ms'
+        )  # Convert timestamp to datetime.
         df = df.sort_values(by='timestamp')  # Sort by timestamp.
-        df['label'] = df['label'].map(self.label_mapping)  # Convert labels to numeric values.
+        df['label'] = df['label'].map(
+            self.label_mapping
+        )  # Convert labels to numeric values.
         df['title_prepared'] = df['title'].apply(clean_text)  # Clean text titles.
         df = df[['title_prepared', 'label']]
         logger.info(f'Data preprocessing complete. Shape: {df.shape}')
@@ -143,7 +158,9 @@ class DataProcessingPipeline:
         # Remove unnecessary index columns
         for split in dataset_dict:
             if '__index_level_0__' in dataset_dict[split].column_names:
-                dataset_dict[split] = dataset_dict[split].remove_columns(['__index_level_0__'])
+                dataset_dict[split] = dataset_dict[split].remove_columns(
+                    ['__index_level_0__']
+                )
 
         logger.info('DatasetDict conversion complete.')
         return dataset_dict
@@ -179,8 +196,10 @@ class DataProcessingPipeline:
         dataset_dict = self.convert_to_dataset_dict(train_df, val_df, test_df)
 
         logger.info('Tokenizing dataset')
-        tokenized_dataset_dict = dataset_dict.map(self.preprocess_function, batched=True)
-        
+        tokenized_dataset_dict = dataset_dict.map(
+            self.preprocess_function, batched=True
+        )
+
         logger.info('Pushing dataset to Hugging Face Hub')
         tokenized_dataset_dict.push_to_hub(config.hf_dataset_registry)
 
