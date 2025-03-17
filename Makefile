@@ -12,11 +12,7 @@ all: build push
 ############################################################
 ## Build all Docker images
 ############################################################
-build: build-api build-data-prep build-model-train
-
-build-api:
-	cd services/api && docker build -f Dockerfile -t model_api .
-	docker tag model_api $(API_TAG)
+build: build-data-prep build-model-train build-api
 
 build-data-prep:
 	cd services/data_preparation && docker build -f Dockerfile -t data_preparation .
@@ -26,13 +22,14 @@ build-model-train:
 	cd services/model_training && docker build -f Dockerfile -t model_training .
 	docker tag model_training $(MODEL_TRAIN_TAG)
 
+build-api:
+	cd services/api && docker build -f Dockerfile -t model_api .
+	docker tag model_api $(API_TAG)
+
 ############################################################
 ## Push all Docker images to Docker Hub
 ############################################################
-push: push-api push-data-prep push-model-train
-
-push-api:
-	docker push $(API_TAG)
+push: push-data-prep push-model-train push-api
 
 push-data-prep:
 	docker push $(DATA_PREP_TAG)
@@ -40,19 +37,22 @@ push-data-prep:
 push-model-train:
 	docker push $(MODEL_TRAIN_TAG)
 
+push-api:
+	docker push $(API_TAG)
+
 ############################################################
 ## Run Docker containers
 ############################################################
-run: run-api run-data-prep run-model-train
-
-run-api:
-	docker run --rm --name api-container -it -p 8000:8000 $(API_TAG)
+run: run-data-prep run-model-train run-api
 
 run-data-prep:
 	docker run --rm --name data-prep-container -it $(DATA_PREP_TAG)
 
 run-model-train:
 	docker run --rm --name model-train-container -it $(MODEL_TRAIN_TAG)
+
+run-api:
+	docker run --rm --name api-container -it -p 8000:8000 $(API_TAG)
 
 ############################################################
 ## Stop and remove running containers

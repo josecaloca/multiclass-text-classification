@@ -14,32 +14,42 @@ Additionally, a **client script** fetches live news headlines and sends them to 
 
 ## 🏗️ Setup & Execution
 
-Each service is containerized with **Docker** and contains a `Makefile` to simplify execution.
+Each service is containerized with **Docker** and contains a `Makefile` to simplify execution. Docker images are available in the following DockerHub repository: https://hub.docker.com/r/josecaloca/multiclass-text-classification
+
+Using `make` from the `Makefile`, we can simplify the execution of the project. It is recommended to see the available `make` commands by running:
+
+```bash
+make help
+```
+In overall, for building the Docker images and running the containers, 1 command is needed:
+
+```bash
+make build run
+```
+
+Alternatively, we can build the Docker images and run the containers of each service as follows:
 
 ### 1️⃣ Run Data Preparation
-```sh
-cd services/data_preparation
-make run
+```bash
+make build-data-prep run-data-prep
 ```
 
 ### 2️⃣ Run Model Training
-```sh
-cd services/model_training
-make run
+```bash
+make build-model-train run-model-train
 ```
 
 ### 3️⃣ Run API Service
-```sh
-cd services/api
-make run
+```bash
+make build-api run-api
 ```
 
-Once the API is running, it will be available at: ```http://127.0.0.1:8000```
+**Note**: Once the API is running, it will be available at: ```http://127.0.0.1:8000```
 
 ## 🚀 Using the System
 
 ### 🔍 Classify News Headlines
-A client script (`client.py`) fetches real-time news headlines from an external news API and classifies them using the deployed model.
+A client script (`./client.py`) fetches real-time news headlines from an external news API and classifies them using the deployed model.
 
 Run the client script:
 ```cd
