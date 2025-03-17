@@ -6,22 +6,22 @@ This project is a **news classification system** that processes and classifies n
 
 The system consists of the following components:
 
-1. **Data Preparation** - Downloads and preprocesses the dataset, cleaning and structuring it for training.
-2. **Model Training** - Trains machine learning models, including fine-tuning a **DistilBERT** model and training an **XGBoost** classifier.
+1. **Data Preparation** - Downloads and preprocesses the [dataset](https://archive.ics.uci.edu/dataset/359/news+aggregator), cleaning and structuring it for training.
+2. **Model Training** - Trains machine learning models, including fine-tuning a **DistilBERT** model and training an **XGBoost** classifier on top of the **DistilBERT** embeddings.
 3. **API Service** - Deploys the trained model as a REST API for real-time news classification.
 
 Additionally, a **client script** fetches live news headlines and sends them to the API for classification.
 
 ## 🏗️ Setup & Execution
 
-Each service is containerized with **Docker** and contains a `Makefile` to simplify execution. Docker images are available in the following DockerHub repository: https://hub.docker.com/r/josecaloca/multiclass-text-classification
+Each service is containerized with **Docker** and the root directory contains a `Makefile` to simplify execution of the project. Docker images are available in the following DockerHub repository so they can be pulled and avoid the step of building the images: https://hub.docker.com/r/josecaloca/multiclass-text-classification
 
-Using `make` from the `Makefile`, we can simplify the execution of the project. It is recommended to see the available `make` commands by running:
+It is recommended to see the available `make` commands by running:
 
 ```bash
 make help
 ```
-In overall, for building the Docker images and running the containers, 1 command is needed:
+In overall, for building the Docker images and running the containers, only 1 command is needed:
 
 ```bash
 make build run
@@ -49,7 +49,7 @@ make build-api run-api
 ## 🚀 Using the System
 
 ### 🔍 Classify News Headlines
-A client script (`./client.py`) fetches real-time news headlines from an external news API and classifies them using the deployed model.
+A client script (`./client.py`) fetches real-time news headlines from an external news API and classifies them using the deployed model. We use top news headlines from [`News API`](https://newsapi.org/docs/endpoints/top-headlines).
 
 Run the client script:
 ```cd
@@ -83,7 +83,7 @@ The API exposes the following endpoint:
 
 ## 🔧 Key Technologies
 
-This project utilizes a modern **MLOps pipeline** with well-structured **Dockerized services** to ensure reproducibility and efficient deployment. Below are the key technologies used:
+This project uses a modern **MLOps pipeline** with well-structured **Dockerized services** to ensure reproducibility and efficient deployment. Below are the key technologies used:
 
 ### 📌 **Machine Learning & Model Training**
 - **Hugging Face Transformers** – Used for **fine-tuning a DistilBERT model** to classify news headlines.
@@ -98,7 +98,7 @@ This project utilizes a modern **MLOps pipeline** with well-structured **Dockeri
 - The trained XGBoost model is stored in **CometML**.
 
 ### 🚀 **Model Deployment & API**
-- **Litserve** – A high-performance framework built on **FastAPI**, optimized specifically for **ML model deployment**.
+- **Litserve** – A high-performance framework built on top of **FastAPI**, optimized specifically for **ML model deployment**.
 - **Requests** – Used in `client.py` to fetch live news headlines and send them to the API for classification.
 
 ### 🐳 **Containerization & Automation**
