@@ -1,7 +1,7 @@
 """
 This module defines the `TrainingPipeline` abstract base class (ABC) for training pipelines.
 
-Any subclass of `TrainingPipeline` must implement the `train` method, which defines the 
+Any subclass of `TrainingPipeline` must implement the `train` method, which defines the
 training process for a specific machine learning model.
 """
 
@@ -18,7 +18,7 @@ class TrainingPipeline(ABC):
     @abstractmethod
     def train(self) -> None:
         """
-        Trains the model. 
+        Trains the model.
 
         This method must be implemented by subclasses to define the specific training logic.
         """

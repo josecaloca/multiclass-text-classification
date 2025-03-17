@@ -10,7 +10,7 @@ This module defines the `XGBoostTrainingPipeline` class, which:
 - Saves the trained XGBoost model for later use.
 """
 
-from typing import Dict, Tuple, Any
+from typing import Any, Dict, Tuple
 
 import comet_ml
 import joblib
@@ -20,7 +20,6 @@ import torch
 import xgboost as xgb
 from datasets import DatasetDict, load_dataset
 from loguru import logger
-from sklearn.metrics import f1_score, precision_score, recall_score
 from transformers import DistilBertModel
 
 from utils.paths import MODELS_DIR
@@ -83,7 +82,7 @@ class XGBoostTrainingPipeline(TrainingPipeline):
         self.id2label = id2label
         self.random_state = random_state
 
-        logger.info("Initializing XGBoostTrainingPipeline")
+        logger.info('Initializing XGBoostTrainingPipeline')
         comet_ml.login(project_name=self.project_name)
 
         # Load dataset
@@ -107,11 +106,11 @@ class XGBoostTrainingPipeline(TrainingPipeline):
         Reduces dataset sizes based on configured fraction reduction.
         This helps in controlling dataset size for efficient training.
         """
-        logger.info("Subsampling datasets")
+        logger.info('Subsampling datasets')
         sample_fractions = {
-            "train": self.frac_sample_reduction_training,
-            "validation": self.frac_sample_reduction_validation,
-            "test": self.frac_sample_reduction_testing,
+            'train': self.frac_sample_reduction_training,
+            'validation': self.frac_sample_reduction_validation,
+            'test': self.frac_sample_reduction_testing,
         }
         self.tokenized_dataset_dict = DatasetDict(
             {
@@ -121,7 +120,7 @@ class XGBoostTrainingPipeline(TrainingPipeline):
                 for split, dataset in self.tokenized_dataset_dict.items()
             }
         )
-        logger.info("Datasets subsampled successfully")
+        logger.info('Datasets subsampled successfully')
 
     def _compute_embeddings(self, batch: Dict[str, Any]) -> Dict[str, np.ndarray]:
         """
@@ -134,12 +133,12 @@ class XGBoostTrainingPipeline(TrainingPipeline):
             Dict[str, np.ndarray]: Dictionary containing extracted embeddings.
         """
         input_ids = torch.nn.utils.rnn.pad_sequence(
-            [torch.tensor(seq) for seq in batch["input_ids"]],
+            [torch.tensor(seq) for seq in batch['input_ids']],
             batch_first=True,
             padding_value=0,
         )
         attention_mask = torch.nn.utils.rnn.pad_sequence(
-            [torch.tensor(seq) for seq in batch["attention_mask"]],
+            [torch.tensor(seq) for seq in batch['attention_mask']],
             batch_first=True,
             padding_value=0,
         )
@@ -147,7 +146,7 @@ class XGBoostTrainingPipeline(TrainingPipeline):
         with torch.no_grad():
             outputs = self.model(input_ids=input_ids, attention_mask=attention_mask)
 
-        return {"embeddings": outputs.last_hidden_state.mean(dim=1).numpy()}
+        return {'embeddings': outputs.last_hidden_state.mean(dim=1).numpy()}
 
     def _extract_embeddings(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
@@ -156,20 +155,20 @@ class XGBoostTrainingPipeline(TrainingPipeline):
         Returns:
             Tuple[np.ndarray, np.ndarray, np.ndarray]: Training, validation, and test embeddings with labels.
         """
-        logger.info("Extracting embeddings from DistilBERT")
+        logger.info('Extracting embeddings from DistilBERT')
 
         self.tokenized_dataset_dict = self.tokenized_dataset_dict.map(
             self._compute_embeddings, batched=True, batch_size=32
         )
 
-        X_train = np.array(self.tokenized_dataset_dict["train"]["embeddings"])
-        y_train = np.array(self.tokenized_dataset_dict["train"]["label"])
+        X_train = np.array(self.tokenized_dataset_dict['train']['embeddings'])
+        y_train = np.array(self.tokenized_dataset_dict['train']['label'])
 
-        X_val = np.array(self.tokenized_dataset_dict["validation"]["embeddings"])
-        y_val = np.array(self.tokenized_dataset_dict["validation"]["label"])
+        X_val = np.array(self.tokenized_dataset_dict['validation']['embeddings'])
+        y_val = np.array(self.tokenized_dataset_dict['validation']['label'])
 
-        X_test = np.array(self.tokenized_dataset_dict["test"]["embeddings"])
-        y_test = np.array(self.tokenized_dataset_dict["test"]["label"])
+        X_test = np.array(self.tokenized_dataset_dict['test']['embeddings'])
+        y_test = np.array(self.tokenized_dataset_dict['test']['label'])
 
         return (X_train, y_train), (X_val, y_val), (X_test, y_test)
 
@@ -180,34 +179,34 @@ class XGBoostTrainingPipeline(TrainingPipeline):
         Returns:
             Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: Training, validation, and test DataFrames.
         """
-        logger.info("Converting embeddings to DataFrame")
+        logger.info('Converting embeddings to DataFrame')
 
         df_train = pd.DataFrame(self.train_dataset[0])
-        df_train["label"] = self.train_dataset[1]
+        df_train['label'] = self.train_dataset[1]
 
         df_val = pd.DataFrame(self.validation_dataset[0])
-        df_val["label"] = self.validation_dataset[1]
+        df_val['label'] = self.validation_dataset[1]
 
         df_test = pd.DataFrame(self.test_dataset[0])
-        df_test["label"] = self.test_dataset[1]
+        df_test['label'] = self.test_dataset[1]
 
-        logger.info("DataFrames created successfully")
+        logger.info('DataFrames created successfully')
         return df_train, df_val, df_test
 
     def train(self) -> None:
         """
         Trains an XGBoost model on the extracted embeddings and logs it to CometML.
         """
-        logger.info("Starting XGBoost training")
+        logger.info('Starting XGBoost training')
         experiment = comet_ml.start(project_name=self.project_name)
 
-        X_train, y_train = self.df_train.drop(columns=["label"]), self.df_train["label"]
-        X_val, y_val = self.df_val.drop(columns=["label"]), self.df_val["label"]
+        X_train, y_train = self.df_train.drop(columns=['label']), self.df_train['label']
+        X_val, y_val = self.df_val.drop(columns=['label']), self.df_val['label']
 
         model = xgb.XGBClassifier(
-            objective="multi:softmax",
+            objective='multi:softmax',
             num_class=4,
-            eval_metric="mlogloss",
+            eval_metric='mlogloss',
             eta=0.1,
             max_depth=6,
             use_label_encoder=False,
@@ -221,5 +220,5 @@ class XGBoostTrainingPipeline(TrainingPipeline):
             y_true=y_val, y_predicted=y_pred, labels=self.id2label.values()
         )
 
-        joblib.dump(model, MODELS_DIR / "xgboost_model.pkl")
+        joblib.dump(model, MODELS_DIR / 'xgboost_model.pkl')
         experiment.end()

@@ -1,8 +1,8 @@
 """
 Module for evaluating a fine-tuned BERT model.
 
-This module provides the `BertModelEvaluator` class, which computes evaluation metrics 
-such as accuracy, precision, recall, and F1-score for a given validation dataset. 
+This module provides the `BertModelEvaluator` class, which computes evaluation metrics
+such as accuracy, precision, recall, and F1-score for a given validation dataset.
 It also logs a confusion matrix to CometML for better performance tracking.
 """
 
@@ -41,13 +41,13 @@ class BertModelEvaluator:
             validation_dataset (Dataset): The dataset used for model validation.
             id2label (dict): Dictionary mapping label indices to label names.
         """
-        logger.info("Initializing BertModelEvaluator")
+        logger.info('Initializing BertModelEvaluator')
         self.validation_dataset = validation_dataset
         self.id2label = id2label
-        self.accuracy = evaluate.load("accuracy")
-        self.precision = evaluate.load("precision")
-        self.recall = evaluate.load("recall")
-        self.f1 = evaluate.load("f1")
+        self.accuracy = evaluate.load('accuracy')
+        self.precision = evaluate.load('precision')
+        self.recall = evaluate.load('recall')
+        self.f1 = evaluate.load('f1')
 
     def get_example(self, index: int) -> str:
         """
@@ -59,7 +59,7 @@ class BertModelEvaluator:
         Returns:
             str: The preprocessed title of the news article at the specified index.
         """
-        return self.validation_dataset[index]["title_prepared"]
+        return self.validation_dataset[index]['title_prepared']
 
     def compute_metrics(self, pred: Union[np.ndarray, Tuple[np.ndarray]]) -> dict:
         """
@@ -80,19 +80,19 @@ class BertModelEvaluator:
                   - "recall": Recall score (macro average).
                   - "f1": F1-score (macro average).
         """
-        logger.info("Computing evaluation metrics")
+        logger.info('Computing evaluation metrics')
         experiment = comet_ml.get_running_experiment()
         preds, labels = pred
         preds = np.argmax(preds, axis=1)
 
         acc = self.accuracy.compute(predictions=preds, references=labels)
         precision = self.precision.compute(
-            predictions=preds, references=labels, average="macro"
+            predictions=preds, references=labels, average='macro'
         )
         recall = self.recall.compute(
-            predictions=preds, references=labels, average="macro"
+            predictions=preds, references=labels, average='macro'
         )
-        f1 = self.f1.compute(predictions=preds, references=labels, average="macro")
+        f1 = self.f1.compute(predictions=preds, references=labels, average='macro')
 
         if experiment:
             epoch = (
@@ -102,10 +102,10 @@ class BertModelEvaluator:
             experiment.log_confusion_matrix(
                 y_true=labels,
                 y_predicted=preds,
-                file_name=f"confusion-matrix-epoch-{epoch}.json",
+                file_name=f'confusion-matrix-epoch-{epoch}.json',
                 labels=list(self.id2label.values()),
                 index_to_example_function=self.get_example,
             )
-            logger.info("Logged confusion matrix to CometML")
+            logger.info('Logged confusion matrix to CometML')
 
         return {**acc, **precision, **recall, **f1}

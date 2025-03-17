@@ -37,7 +37,7 @@ class BERTLitAPI(LitAPI):
 
         Returns:
             dict: A dictionary containing tokenized inputs in PyTorch tensor format.
-        
+
         Raises:
             ValueError: If the 'title' field is missing from the request.
         """
@@ -93,7 +93,7 @@ class BERTLitAPI(LitAPI):
 if __name__ == '__main__':
     try:
         api = BERTLitAPI()
-        server = LitServer(api, api_path="/predict", healthcheck_path ="/health")
+        server = LitServer(api, api_path='/predict', healthcheck_path='/health')
         server.run(port=8000)
     except Exception as e:
         logger.error(f'Error starting the server: {e}')

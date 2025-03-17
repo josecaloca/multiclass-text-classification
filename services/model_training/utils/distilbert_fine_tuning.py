@@ -5,7 +5,7 @@ prepares training, validation, and test splits, fine-tunes a pre-trained BERT mo
 and evaluates its performance using a custom evaluator.
 """
 
-from typing import Tuple, Dict
+from typing import Dict, Tuple
 
 import comet_ml
 from datasets import Dataset, load_dataset
@@ -63,14 +63,16 @@ class BertFineTuningPipeline(TrainingPipeline):
         self.frac_sample_reduction_training = frac_sample_reduction_training
         self.random_state = random_state
 
-        logger.info("Initializing BertFineTuningPipeline")
+        logger.info('Initializing BertFineTuningPipeline')
         comet_ml.login(project_name=self.project_name)
 
         self.tokenized_dataset_dict = load_dataset(self.hf_dataset_registry)
         self.tokenizer = AutoTokenizer.from_pretrained(self.pre_trained_bert_model)
         self.data_collator = DataCollatorWithPadding(tokenizer=self.tokenizer)
 
-        self.train_dataset, self.validation_dataset, self.test_dataset = self._prepare_datasets()
+        self.train_dataset, self.validation_dataset, self.test_dataset = (
+            self._prepare_datasets()
+        )
         self.model = AutoModelForSequenceClassification.from_pretrained(
             self.pre_trained_bert_model,
             num_labels=4,
@@ -88,20 +90,22 @@ class BertFineTuningPipeline(TrainingPipeline):
             Tuple[Dataset, Dataset, Dataset]: A tuple containing the training, validation,
             and test datasets.
         """
-        logger.info("Preparing datasets")
-        total_train_samples = self.tokenized_dataset_dict["train"].num_rows
-        training_sample_size = int(total_train_samples * self.frac_sample_reduction_training)
+        logger.info('Preparing datasets')
+        total_train_samples = self.tokenized_dataset_dict['train'].num_rows
+        training_sample_size = int(
+            total_train_samples * self.frac_sample_reduction_training
+        )
         if training_sample_size != total_train_samples:
             train_dataset = (
-                self.tokenized_dataset_dict["train"]
+                self.tokenized_dataset_dict['train']
                 .shuffle(seed=self.random_state)
                 .select(range(training_sample_size))
             )
         else:
-            train_dataset = self.tokenized_dataset_dict["train"]
-        validation_dataset = self.tokenized_dataset_dict["validation"]
-        test_dataset = self.tokenized_dataset_dict["test"]
-        logger.info("Datasets prepared successfully")
+            train_dataset = self.tokenized_dataset_dict['train']
+        validation_dataset = self.tokenized_dataset_dict['validation']
+        test_dataset = self.tokenized_dataset_dict['test']
+        logger.info('Datasets prepared successfully')
         return train_dataset, validation_dataset, test_dataset
 
     def train(self) -> None:
@@ -109,7 +113,7 @@ class BertFineTuningPipeline(TrainingPipeline):
         Trains the BERT model using the specified training arguments and evaluates the model.
         After training, the pipeline pushes the trained model and tokenizer to the Hugging Face Hub.
         """
-        logger.info("Starting model training")
+        logger.info('Starting model training')
         training_args = TrainingArguments(
             seed=self.random_state,
             output_dir=MODELS_DIR / self.project_name,
@@ -117,14 +121,14 @@ class BertFineTuningPipeline(TrainingPipeline):
             num_train_epochs=1,
             do_train=True,
             do_eval=True,
-            eval_strategy="steps",
+            eval_strategy='steps',
             eval_steps=25,
-            save_strategy="steps",
+            save_strategy='steps',
             save_total_limit=10,
             save_steps=25,
             per_device_train_batch_size=8,
             push_to_hub=True,
-            report_to=["comet_ml"],
+            report_to=['comet_ml'],
         )
 
         trainer = Trainer(
@@ -137,8 +141,8 @@ class BertFineTuningPipeline(TrainingPipeline):
         )
 
         trainer.train()
-        logger.info("Training completed")
+        logger.info('Training completed')
         comet_ml.get_running_experiment().end()
         trainer.push_to_hub(self.hf_model_registry)
         self.tokenizer.push_to_hub(self.hf_model_registry)
-        logger.info("Model and custom Tokenizer pushed to hub successfully")
+        logger.info('Model and custom Tokenizer pushed to hub successfully')

@@ -12,11 +12,11 @@ from loguru import logger
 from utils.distilbert_fine_tuning import BertFineTuningPipeline
 from utils.xgboost_trainer import XGBoostTrainingPipeline
 
-if __name__ == "__main__":
-    load_dotenv("settings.env")  # Load environment variables
+if __name__ == '__main__':
+    load_dotenv('settings.env')  # Load environment variables
 
     # Execute DistilBERT fine-tuning pipeline
-    logger.info("Starting BertFineTuningPipeline execution")
+    logger.info('Starting BertFineTuningPipeline execution')
     bert_pipeline = BertFineTuningPipeline(
         project_name=config.project_name,
         hf_dataset_registry=config.hf_dataset_registry,
@@ -28,10 +28,10 @@ if __name__ == "__main__":
         random_state=config.random_state,
     )
     bert_pipeline.train()
-    logger.info("BertFineTuningPipeline execution completed")
+    logger.info('BertFineTuningPipeline execution completed')
 
     # Execute XGBoost training pipeline
-    logger.info("Starting XGBoostTrainingPipeline execution")
+    logger.info('Starting XGBoostTrainingPipeline execution')
     xgboost_pipeline = XGBoostTrainingPipeline(
         project_name=config.project_name,
         hf_dataset_registry=config.hf_dataset_registry,
@@ -43,4 +43,4 @@ if __name__ == "__main__":
         random_state=config.random_state,
     )
     xgboost_pipeline.train()
-    logger.info("XGBoostTrainingPipeline execution completed")
+    logger.info('XGBoostTrainingPipeline execution completed')
