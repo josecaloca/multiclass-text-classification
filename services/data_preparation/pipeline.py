@@ -1,17 +1,18 @@
 import zipfile
 from io import BytesIO
-from typing import Dict, Tuple
+from typing import Tuple
 
 import pandas as pd
 import requests
-from config import Config, config
 from datasets import Dataset, DatasetDict
 from dotenv import load_dotenv
 from loguru import logger
 from sklearn.model_selection import train_test_split
 from transformers import AutoTokenizer
-from utils.paths import RAW_DATA_DIR
+
 from utils.text_cleaner import clean_text
+from utils.paths import RAW_DATA_DIR
+from config import Config, config
 
 
 class DataProcessingPipeline:
@@ -26,19 +27,19 @@ class DataProcessingPipeline:
         Initializes the data processing pipeline with necessary configurations.
 
         Args:
-            config (Config): Configuration object containing data splitting ratios and model settings.
+            config (Config): Configuration object containing data splitting ratios
+                             and pre-trained model details.
         """
         logger.info('Initializing DataProcessingPipeline')
         self.train_ratio = config.train_ratio
         self.val_ratio = config.val_ratio
         self.test_ratio = config.test_ratio
-        self.label_mapping = {'b': 0, 't': 1, 'e': 2, 'm': 3}
+        self.label_mapping = {'b': 0, 't': 1, 'e': 2, 'm': 3}  # Maps category labels to numerical values.
         self.tokenizer = AutoTokenizer.from_pretrained(config.pre_trained_bert_model)
 
     def download_and_extract_dataset(self) -> None:
         """
-        Downloads and extracts the News Aggregator Dataset from the UCI repository.
-        Saves the dataset in the specified `RAW_DATA_DIR` directory.
+        Downloads the News Aggregator Dataset from the UCI repository and extracts it to the raw data directory.
         """
         logger.info('Downloading and extracting dataset')
         url = 'https://archive.ics.uci.edu/ml/machine-learning-databases/00359/NewsAggregatorDataset.zip'
@@ -55,18 +56,11 @@ class DataProcessingPipeline:
         Loads the dataset into a pandas DataFrame.
 
         Returns:
-            pd.DataFrame: The dataset as a DataFrame with labeled columns.
+            pd.DataFrame: A DataFrame containing the raw dataset.
         """
         logger.info('Loading dataset into a DataFrame')
         news_columns = [
-            'id',
-            'title',
-            'url',
-            'publisher',
-            'label',
-            'story',
-            'hostname',
-            'timestamp',
+            'id', 'title', 'url', 'publisher', 'label', 'story', 'hostname', 'timestamp'
         ]
         news_df = pd.read_csv(
             RAW_DATA_DIR / 'newsCorpora.csv', delimiter='\t', names=news_columns
@@ -76,20 +70,19 @@ class DataProcessingPipeline:
 
     def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Preprocesses the dataset by converting timestamps, sorting records,
-        mapping labels to integers, and cleaning text.
+        Preprocesses the dataset by sorting, mapping labels to numerical values, and cleaning text data.
 
         Args:
-            df (pd.DataFrame): The raw dataset containing news articles.
+            df (pd.DataFrame): The raw dataset.
 
         Returns:
-            pd.DataFrame: The preprocessed dataset with cleaned text and mapped labels.
+            pd.DataFrame: A cleaned dataset with only the required columns for training.
         """
         logger.info('Preprocessing data')
-        df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
-        df = df.sort_values(by='timestamp')
-        df['label'] = df['label'].map(self.label_mapping)
-        df['title_prepared'] = df['title'].apply(clean_text)
+        df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')  # Convert timestamp to datetime.
+        df = df.sort_values(by='timestamp')  # Sort by timestamp.
+        df['label'] = df['label'].map(self.label_mapping)  # Convert labels to numeric values.
+        df['title_prepared'] = df['title'].apply(clean_text)  # Clean text titles.
         df = df[['title_prepared', 'label']]
         logger.info(f'Data preprocessing complete. Shape: {df.shape}')
         return df
@@ -101,10 +94,13 @@ class DataProcessingPipeline:
         Splits the dataset into training, validation, and test sets using stratified sampling.
 
         Args:
-            df (pd.DataFrame): The preprocessed dataset with labels.
+            df (pd.DataFrame): The preprocessed dataset.
 
         Returns:
-            Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: The train, validation, and test datasets respectively.
+            Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+                - train_df: Training dataset
+                - val_df: Validation dataset
+                - test_df: Test dataset
         """
         logger.info('Splitting data into train, validation, and test sets')
         train_df, temp_df = train_test_split(
@@ -125,7 +121,7 @@ class DataProcessingPipeline:
         self, train_df: pd.DataFrame, val_df: pd.DataFrame, test_df: pd.DataFrame
     ) -> DatasetDict:
         """
-        Converts pandas DataFrames to a Hugging Face DatasetDict format.
+        Converts DataFrames to a Hugging Face DatasetDict format for model training.
 
         Args:
             train_df (pd.DataFrame): Training dataset.
@@ -133,7 +129,7 @@ class DataProcessingPipeline:
             test_df (pd.DataFrame): Test dataset.
 
         Returns:
-            DatasetDict: A dictionary-like object containing train, validation, and test datasets.
+            DatasetDict: A dictionary containing the datasets in Hugging Face's format.
         """
         logger.info('Converting DataFrames to Hugging Face DatasetDict')
         dataset_dict = DatasetDict(
@@ -144,28 +140,25 @@ class DataProcessingPipeline:
             }
         )
 
+        # Remove unnecessary index columns
         for split in dataset_dict:
             if '__index_level_0__' in dataset_dict[split].column_names:
-                dataset_dict[split] = dataset_dict[split].remove_columns(
-                    ['__index_level_0__']
-                )
+                dataset_dict[split] = dataset_dict[split].remove_columns(['__index_level_0__'])
 
         logger.info('DatasetDict conversion complete.')
         return dataset_dict
 
-    def preprocess_function(self, df: pd.DataFrame) -> Dict[str, list]:
+    def preprocess_function(self, df: pd.DataFrame) -> dict:
         """
-        Tokenizes dataset using the pre-trained tokenizer.
+        Tokenizes dataset text using a pre-trained BERT tokenizer.
 
         Args:
-            df (pd.DataFrame): The dataset containing text to be tokenized.
+            df (pd.DataFrame): The dataset containing preprocessed text.
 
         Returns:
-            Dict[str, list]: A dictionary containing tokenized input IDs and attention masks.
+            dict: Tokenized input representations suitable for transformer models.
         """
-        return self.tokenizer(
-            df['title_prepared'].tolist(), padding=True, truncation=True
-        )
+        return self.tokenizer(df['title_prepared'], padding=True, truncation=True)
 
     def process(self) -> None:
         """
@@ -186,9 +179,8 @@ class DataProcessingPipeline:
         dataset_dict = self.convert_to_dataset_dict(train_df, val_df, test_df)
 
         logger.info('Tokenizing dataset')
-        tokenized_dataset_dict = dataset_dict.map(
-            self.preprocess_function, batched=True
-        )
+        tokenized_dataset_dict = dataset_dict.map(self.preprocess_function, batched=True)
+        
         logger.info('Pushing dataset to Hugging Face Hub')
         tokenized_dataset_dict.push_to_hub(config.hf_dataset_registry)
 
